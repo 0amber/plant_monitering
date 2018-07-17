@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>トマト葉膜電位リアルタイムモニター</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="/javascript/epoch.min.js"></script>
+<script src="/javascript/data.js"></script>
+<link rel="stylesheet" type="text/css" href="/css/epoch.min.css">
+</head>
+<body>
+<style>
+    .gauges .epoch {
+        display: inline-block;
+    }
+</style>
+<h1>トマト葉膜電位リアルタイムモニター</h1>
+<p><a href="http://192.168.1.133:8000/plot">相関図</a></p>
+<h3 style="margin-left: 10px">葉膜電位　電圧[V]</h3>
+<div id="lineVoltChart" style="width: 1000px; height: 100px"></div>
+<h3 style="margin-left: 10px">土壌湿度</h3>
+<div id="lineMoistureChart" style="width: 1000px; height: 100px"></div>
+<h3 style="margin-left: 10px">気温[℃]</h3>
+<div id="lineTemperatureChart" style="width: 1000px; height: 100px"></div>
+<h3 style="margin-left: 10px">日照度</h3>
+<div id="lineIlluminanceChart" style="width: 1000px; height: 100px"></div>
+<script>
+
+var lineVoltChartData = [
+  {label:"volt", values:[]}
+];
+var lineMoistureChartData = [
+  {label:"moisture", values:[]}
+];
+var lineTemperatureChartData = [
+  {label:"temperature", values:[]}
+];
+var lineIlluminanceChartData = [
+  {label:"illuminance", values:[]}
+];
+
+var lineVoltChart = $('#lineVoltChart').epoch({
+  type: 'time.line',
+  data: lineVoltChartData,
+  axes: ['left', 'bottom']
+});
+var lineMoistureChart = $('#lineMoistureChart').epoch({
+  type: 'time.line',
+  data: lineMoistureChartData,
+  axes: ['left', 'bottom']
+});
+var lineTemperatureChart = $('#lineTemperatureChart').epoch({
+  type: 'time.line',
+  data: lineTemperatureChartData,
+  axes: ['left', 'bottom']
+});
+var lineIlluminanceChart = $('#lineIlluminanceChart').epoch({
+  type: 'time.line',
+  data: lineIlluminanceChartData,
+  axes: ['left', 'bottom']
+});
+
+//Socket Data Receive
+$(function() {
+  var url = "http://localhost:8000";
+  var socket = io.connect(url);
+  const now = new Date();
+
+  socket.on("moniterValPre", function (data) {
+    socket.emit("received", data);
+  });
+
+  socket.on("moniterVal", function (data) {
+  var volt = data.volt;
+  var moisture = data.moisture;
+  var temperature = data.temperature;
+  var illuminance = data.illuminance;
+  var newLineVoltChartData = [
+    {time: now, y:volt}
+  ];
+  var newLineMoistureChartData = [
+    {time: now, y:moisture}
+  ];
+  var newLineTemperatureChartData = [
+    {time: now, y:temperature}
+  ];
+  var newLineIlluminanceChartData = [
+    {time: now, y:illuminance}
+  ];
+  lineVoltChart.push(newLineVoltChartData);
+  lineMoistureChart.push(newLineMoistureChartData);
+  lineTemperatureChart.push(newLineTemperatureChartData);
+  lineIlluminanceChart.push(newLineIlluminanceChartData);
+
+  socket.emit("received", data);
+    });
+});
+
+</script>
+</body>
+</html>

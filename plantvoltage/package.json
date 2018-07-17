@@ -1,0 +1,17 @@
+{
+  "name": "node",
+  "version": "8.11.3",
+  "description": "getrequest",
+  "main": "get.js",
+  "dependencies": {
+    "express": "^4.16.3",
+    "iconv-lite": "^0.4.23",
+    "socket.io": "^2.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>葉膜電位の相関図</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="/javascript/epoch.min.js"></script>
+<script src="/javascript/data.js"></script>
+<link rel="stylesheet" type="text/css" href="/css/epoch.min.css">
+
+</head>
+<body>
+<h3>土壌湿度と葉膜電位の相関</h3>
+<div id="scatterVoltsToMoistures" style="width: 1200px; height: 350px;">
+</div>
+<h3>気温と葉膜電位の相関</h3>
+<div id="scatterVoltsToTemperatures" style="width: 1200px; height: 350px;">
+</div>
+<h3>日照と葉膜電位の相関</h3>
+<div id="scatterVoltsToIlluminances" style="width: 1200px; height: 350px;">
+</div>
+<script>
+var volts = "{{volts}}";
+voltAry = volts.split(',');
+console.log(voltAry.length);
+
+var moistures = "{{moistures}}";
+moistureAry = moistures.split(',');
+console.log(moistureAry.length);
+
+var temperatures = "{{temperatures}}";
+temperatureAry = temperatures.split(',');
+console.log(temperatureAry.length);
+
+var illuminances = "{{illuminances}}";
+illuminanceAry = illuminances.split(',');
+console.log(illuminanceAry.length);
+
+//var times = "{{times}}";
+//timeAry = times.split(',');
+//console.log(timeAry[1]);
+
+var voltsToMoisturesData =
+  {
+    label: "Group 1",
+    values: []
+};
+
+var voltsToTemperaturesData =
+  {
+      label: "Group 1",
+      values: []
+};
+
+var voltsToIlluminancesData =
+  {
+      label: "Group 1",
+      values: []
+};
+
+
+for (var i = 0; i < voltAry.length; i++) {
+  voltsToMoisturesData.values.push({x:moistureAry[i], y:voltAry[i]});
+}
+
+for (var i = 0; i < voltAry.length; i++) {
+  voltsToTemperaturesData.values.push({x:temperatureAry[i], y:voltAry[i]});
+}
+
+for (var i = 0; i < voltAry.length; i++) {
+  voltsToIlluminancesData.values.push({x:illuminanceAry[i], y:voltAry[i]});
+}
+
+var svm = $('#scatterVoltsToMoistures').epoch({
+  type: 'scatter',
+  data: [voltsToMoisturesData],
+  axes: ['bottom', 'left']
+});
+
+var svt = $('#scatterVoltsToTemperatures').epoch({
+  type: 'scatter',
+  data: [voltsToTemperaturesData],
+  axes: ['bottom', 'left']
+});
+
+var svi = $('#scatterVoltsToIlluminances').epoch({
+  type: 'scatter',
+  data: [voltsToIlluminancesData],
+  axes: ['bottom', 'left']
+});
+
+</script>
+</body>
+</html>

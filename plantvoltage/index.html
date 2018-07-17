@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>温度の時系列グラフ</title>
+<style>
+/* 外部スタイルシートの読み込み */
+@import "./jqplot.css";     /* jqPlot用CSS */
+h1 {
+	padding: 0px 0px 10px 10px;
+	border-bottom: 1px solid gray;
+}
+h1 span {font-size: 50%}
+div#canvas-frame_graph{
+  width : 780px;              /* 横幅 */
+  height : 500px;             /* 縦幅 */
+}
+</style>
+<!-- 外部JavaScriptファイルの読み込み -->
+<script src="javascript/jquery-1.10.2.js"></script>                          <!-- jQuery用ライブラリ -->
+<script src="javascript/jquery.jqplot_1.0.8.js"></script>                    <!-- jqPlot用ライブラリ             -->
+<script src="javascript/plugins/jqplot.canvasTextRenderer.js"></script>      <!-- canvasテキスト描画用プラグイン -->
+<script src="javascript/plugins/jqplot.canvasAxisTickRenderer.js"></script>  <!-- canvas目盛描画用プラグイン     -->
+<script src="javascript/plugins/jqplot.canvasAxisLabelRenderer.js"></script> <!-- canvas軸ラベル描画用プラグイン -->
+<script src="javascript/plugins/jqplot.logAxisRenderer.js"></script>         <!-- 対数グラフ描画用プラグイン     -->
+<script src="javascript/plugins/jqplot.highlighter.js"></script>             <!-- ハイライト表示用プラグイン     -->
+<script src="javascript/plugins/jqplot.cursor.js"></script>                  <!-- カーソル描画用プラグイン       -->
+<script src="javascript/plot2D_r8.js"></script>                              <!-- ２次元グラフ描画クラス         -->
+<script src="/socket.io/socket.io.js"></script>
+<script>
+      var plot2D; //2D graph object
+      var Mdata = []; // moisture
+      var Vdata = []; // volt
+      var Tdata = []; // time
+      var step = 0;
+      var plotflag = true; //graph scketch flag
+
+      //receive data from server
+      var socket = io.connect("http://localhost:8000", { transports: [ 'websocket' ] });
+      socket.on("connect", function(){
+        console.log("サーバーとの接続完了");
+      });
+      socket.on("moniterVal", function(data){
+        console.log(data);
+        //parse String to float
+        var moisture = parseFloat(data.moisture);
+        var volt = parseFloat(data.volt);
+        var time = parseFloat(data.time);
+        //parse String to float
+        Mdata.push = [time, moisture];
+        Vdata.push = [time, volt];
+        //select number of data
+        if (Mdata.length == 51) Mdata.splice(0,5);
+        if (Vdata.length == 51) Vdata.splice(0,5);
+        plot();
+        step++;
+      });
+      ////////////////////////////////////////////////////////////////////
+      // windowイベントの定義
+      ////////////////////////////////////////////////////////////////////
+      window.addEventListener("load", function () {
+
+      	//////////////////////////////////////////////////////
+      	// グラフ描画オブジェクトの準備
+      	//////////////////////////////////////////////////////
+      	//座標グラフ描画オブジェクト
+      	plot2D = new Plot2D( "canvas-frame_graph" );
+
+      	//オプションの設定
+      	plot2D.options.axesDefaults.pad = 1.0; //パディング
+      	plot2D.options.axesDefaults.labelOptions.fontSize = "24pt"; //ラベルのフォントサイズ
+      	plot2D.options.axesDefaults.tickOptions.fontSize = "14pt";  //目盛のフォントサイズ
+
+      	plot2D.options.axes.xaxis.label = "Time[s]"; //x軸ラベル
+      	plot2D.options.axes.yaxis.label = "Temperature[℃]"; //y軸ラベル
+      	plot2D.options.axes.xaxis.min = null;  //目盛の最小値
+      	plot2D.options.axes.xaxis.max = null;  //目盛の最大値
+      //	plot2D.options.axes.xaxis.tickInterval = 5;
+      	plot2D.options.axes.xaxis.tickOptions = {formatString : "%d"}; //メモリフォーマット
+      	plot2D.options.axes.yaxis.min = 0;  //目盛の最小値
+      	plot2D.options.axes.yaxis.max = 40;  //目盛の最大値
+      	plot2D.options.axes.yaxis.tickInterval = 5;
+      	plot2D.options.axes.yaxis.labelOptions = { angle: -90 };   //ラベル回転角
+      	plot2D.options.seriesDefaults.lineWidth = 4.0;
+      	plot2D.options.seriesDefaults.markerOptions.size = 8.0;
+      	plot2D.options.legend.show = true;     //凡例の有無
+      	plot2D.options.legend.location = 'ne'; //凡例の位置
+
+      	var series = []; //データ列オプション用配列
+      	series.push({
+      		showLine: true,                //線描画の有無
+      		label: "温度",             //凡例の設定
+      		markerOptions: { show: true }  //点描画の有無
+      	});
+      	plot2D.options.series = series; //データ列オプションの代入
+
+
+      	document.getElementById("canvas-frame_graph").addEventListener("mouseover", function () {
+      		if( Tdata.length >= 10 ) plotflag = false;
+      	});
+      	document.getElementById("canvas-frame_graph").addEventListener("mouseout", function () {
+      		plotflag = true;
+      	});
+      });
+      //グラフ描画
+      function plot(){
+
+      	plot2D.options.axes.xaxis.min = (step < 50)? 0 : Tdata[0][0];  //目盛の最小値
+      	plot2D.options.axes.xaxis.max = (step < 50)? 50 : Tdata[0][0]+50;  //目盛の最大値
+      	plot2D.options.axes.xaxis.tickInterval = 5;
+
+      	if( plotflag ){
+      		//データの削除
+      		plot2D.clearData( );
+      		//「pushData」メソッドによるデータの追加
+      		plot2D.pushData( Tdata );
+
+      		//線形プロット
+      		if( step == 0 ){
+      			plot2D.linearPlot()
+      		} else {
+      			plot2D.replot( true ); //軸の再スケールフラグ
+      		}
+      	} else {
+
+      		//PNG画像の生成
+      		var img = plot2D.makeImage();
+      		document.getElementById( "png" ).href = img.src;
+      		document.getElementById( "png" ).download = "graph.png";
+
+      	}
+      }
+      </script>
+      </head>
+      <body>
+      	<h1>要膜電位の時系列データ <span>（<a id="png">画像ダウンロード</a>）</span> </h1>
+      	<div id="canvas-frame_graph"></div>
+      </body>
+      </html>

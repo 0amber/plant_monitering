@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Socket通信で受け取ったデータのリアルタイムチャート</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="/javascript/epoch.min.js"></script>
+<script src="/javascript/data.js"></script>
+<link rel="stylesheet" type="text/css" href="/css/epoch.min.css">
+</head>
+<body>
+<style>
+    .gauges .epoch {
+        display: inline-block;
+    }
+</style>
+<h3 id="gauge" style="margin-left: 10px">Accelerater Gauge</h3>
+<div class="gauges">
+<div id="gauge-ax" class="epoch gauge-medium"></div>
+<div id="gauge-ay" class="epoch gauge-medium"></div>
+</div>
+<h3 id="line" style="margin-left: 10px">Accelerater Line</h3>
+<div id="timeline-ax" class="epoch"></div>
+<div id="timeline-ay" class="epoch"></div>
+<script>
+var socketData = {Ax:0, Ay:0, Gx:0, Gy:0};
+
+//Gause Chart Run
+$(function() {
+
+    var data = new GaugeData();
+
+    var accelProperty = { type: 'time.gauge', value: 0, format: function(v) { return Math.abs((v*100).toFixed(2)) + '%'; } };
+
+    var charts = [
+        $('#gauge-ax').epoch(accelProperty), $('#gauge-ay').epoch(accelProperty),
+    ];
+
+    function updateCharts() {
+        var c = 0;
+        for (var pname in socketData) {
+            charts[c].update(Math.abs(socketData[pname]));
+            c++;
+            if(c >= charts.length) {
+                return;
+            }
+        }
+    }
+
+    setInterval(updateCharts, 1000);
+
+});
+
+//Line Chart Run
+$(function() {
+
+    var data = new RealTimeData(1);
+
+    var dataProperty = {type: 'time.line', ticks: { time: 10, right: 5, left: 5 }, margins: { top: 10, right: 50, bottom: 30, left: 50 }, height: 150, data: data.history(60), axes: ['left', 'bottom', 'right']};
+
+    var charts = [
+        $('#timeline-ax').epoch(dataProperty), $('#timeline-ay').epoch(dataProperty),
+    ];
+
+    function updateCharts() {
+        var c = 0;
+        for (var pname in socketData) {
+            charts[c].push(data.next(socketData[pname]));
+            c++;
+            if(c >= charts.length) {
+                data.nextFrame();
+                return;
+            }
+        }
+
+    }
+
+    setInterval(updateCharts, 1000);
+
+});
+
+//Socket Data Receive
+$(function() {
+
+    var url = "http://localhost:8000";
+    var socket = io.connect(url);
+    const now = new Date();
+    socket.on("moniterVal", function (d) {
+        socketData = {Ax:now, Ay:d.moisture, Gx:now, Gy:d.volt};
+    });
+
+});
+</script>
+</body>
+</html>

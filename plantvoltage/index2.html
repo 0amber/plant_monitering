@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style type="text/css">
+        .axis text {
+            font: 10px sans-serif;
+        }
+        .axis path {
+            opacity: 0.1;
+            stroke: #000;
+            stroke-width: 0.1;
+            shape-rendering: crispEdges;
+        }
+        .axis line {
+            stroke: #000;
+            stroke-width: 1;
+            shape-rendering: crispEdges;
+        }
+        .line {
+            fill: none;
+            stroke: DarkGreen;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+
+<body>
+        <div id="d3graph"></div>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+    var moisture;
+    var volt;
+    var time;
+    //receive data from server
+    var socket = io.connect("http://localhost:8000", { transports: [ 'websocket' ] });
+    socket.on("connect", function(){
+      console.log("サーバーとの接続完了");
+    });
+    socket.on("moniterVal", function(data){
+  //    console.log(data);
+      //parse String to float
+      moisture = parseFloat(data.moisture);
+      volt = parseFloat(data.volt);
+      time = parseFloat(data.time);
+    });
+
+        window.addEventListener("loaded", update, false);
+        console.log(moisture);
+
+        var dataset = [];
+
+        function generateData() {
+            const now = new Date();
+            const data = {
+                time: now,
+                val: moisture,
+                volt: volt
+            };
+            dataset.push(data)
+        }
+
+        var margin = {
+            top: 30,
+            right: 50,
+            bottom: 30,
+            left: 50
+        };
+        var width = 600 - margin.left - margin.right;
+        var height = 500 - margin.top - margin.bottom;
+
+        var xScale = d3.time.scale()
+            .range([0, width]);
+
+        var yScale = d3.scale.linear()
+            .range([height, 0])
+            .domain([0, 10]);
+
+        var xAxis = d3.svg.axis()
+            .scale(xScale)
+            .orient("bottom")
+            .ticks(10)
+            .tickFormat(d3.time.format('%M:%S'));
+
+        var yAxis = d3.svg.axis()
+            .scale(yScale)
+            .orient("left");
+
+        var line = d3.svg.line()
+            .x(function(d) {
+                return xScale(d.time);
+            })
+            .y(function(d) {
+                return yScale(d.val);
+            })
+            .interpolate("cardinal");
+
+        var svg = d3.selectAll("#d3graph").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        function update() {
+            if (dataset.length > width / 20) {
+                dataset.shift();
+            }
+            svg.selectAll("path").remove();
+            svg.selectAll("g").remove();
+
+            xScale.domain(d3.extent(dataset, function(d) {
+                return d.time;
+            }));
+             yScale.domain(d3.extent(dataset, function(d) {
+                 return d.val;
+             })).nice();
+
+            svg.append("g")
+                .attr("class", "y axis")
+                .call(yAxis)
+                .append("text")
+                .attr("y", -10)
+                .attr("x", 10)
+                .style("text-anchor", "end")
+                .text("値");
+
+            svg.append("g")
+                .attr("class", "x axis")
+                .call(xAxis)
+                .attr("transform", "translate(0," + height + ")")
+
+
+            svg.append("path")
+                .datum(dataset)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-linejoin", "round")
+                .attr("stroke-linecap", "round")
+                .attr("stroke-width", 1.5)
+                .attr("d", line);
+        };
+
+        setInterval(generateData, 500);
+        setInterval(update, 500);
+    </script>
+</body>
+</html>
