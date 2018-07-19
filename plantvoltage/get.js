@@ -3,13 +3,14 @@ var http = require('http');
 var app = express();
 var server = http.createServer(app);
 var io = require('socket.io')(server);
-server.listen(8000);
 var mongoose = require('mongoose');
 var fs = require("fs");
 const path  = require('path')
 const iconv = require('iconv-lite')
 var cons = require('consolidate');
-const PORT = process.env.PORT || 8000;
+//var cors = require('cors');
+var corser = require('corser');
+server.listen(8000);
 
 //use static file
 app.use(express.static(__dirname + '/public'));
@@ -21,14 +22,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'html');
 
 // allow CORS not yet conpleated
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", 'http://localhost:8000');
-  res.header("Access-Control-Allow-Credentials", true);
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json,Authorization');
-next();
-});
-
+//app.use(cors());
+app.use(corser.create());
 //DB setup
 var Schema   = mongoose.Schema;
 var MonitorSchema = new Schema({
