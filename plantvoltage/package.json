@@ -4,6 +4,7 @@
   "description": "getrequest",
   "main": "get.js",
   "dependencies": {
+    "cors": "^2.8.4",
     "express": "^4.16.3",
     "iconv-lite": "^0.4.23",
     "socket.io": "^2.1.1"

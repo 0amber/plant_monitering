@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>葉膜電位の相関図</title>
+<title>モニタリング</title>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="http://d3js.org/d3.v3.min.js"></script>
@@ -12,13 +12,16 @@
 
 </head>
 <body>
-<h3>土壌湿度と葉膜電位の相関</h3>
+<h3>葉膜電位の相関</h3>
+<div id="scatterVoltsToIlluminances" style="width: 1200px; height: 350px;">
+</div>
+<h3>土壌湿度</h3>
 <div id="scatterVoltsToMoistures" style="width: 1200px; height: 350px;">
 </div>
-<h3>気温と葉膜電位の相関</h3>
+<h3>気温</h3>
 <div id="scatterVoltsToTemperatures" style="width: 1200px; height: 350px;">
 </div>
-<h3>日照と葉膜電位の相関</h3>
+<h3>日照膜電位の相関</h3>
 <div id="scatterVoltsToIlluminances" style="width: 1200px; height: 350px;">
 </div>
 <script>
@@ -38,23 +41,29 @@ var illuminances = "{{illuminances}}";
 illuminanceAry = illuminances.split(',');
 console.log(illuminanceAry);
 
-//var times = "{{times}}";
-//timeAry = times.split(',');
-//console.log(timeAry[1]);
+var times = "{{times}}";
+timeAry = times.split(',');
+console.log(timeAry);
 
-var voltsToMoisturesData =
+var voltsData =
   {
     label: "Group 1",
     values: []
 };
 
-var voltsToTemperaturesData =
+var moisturesData =
+  {
+    label: "Group 1",
+    values: []
+};
+
+var temperaturesData =
   {
       label: "Group 1",
       values: []
 };
 
-var voltsToIlluminancesData =
+var illuminancesData =
   {
       label: "Group 1",
       values: []
