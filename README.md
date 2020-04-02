@@ -1,4 +1,4 @@
-# plant_monitering
+# plant_automated monitering + visual AI recognition
 OBJECIVE: 
 Create Automated Monitoring and Datainput Plant grow system to discover Agritech new Services.
 
